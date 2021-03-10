@@ -1,0 +1,22 @@
+{
+  "name": "alloy-sdk",
+  "version": "1.0.0",
+  "description": "Run Alloy workflows from a nodejs server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alloy-automation/alloy-node-sdk.git"
+  },
+  "keywords": [
+    "automation"
+  ],
+  "author": "Alloy Automation Inc",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alloy-automation/alloy-node-sdk/issues"
+  },
+  "homepage": "https://github.com/alloy-automation/alloy-node-sdk#readme"
+}
