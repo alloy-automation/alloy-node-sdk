@@ -1,43 +1,51 @@
-const https = require('https');
+const axios = require('axios');
 
-exports.runAlloy = (config) => {
-  const { workflowId, apiKey, parameters } = config;
-  const data = parameters ? JSON.stringify(parameters) : '{}';
-  const options = {
-    hostname: 'webhooks.runalloy.com',
-    path: `/${workflowId}`,
-    port: 443,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Content-Length': data.length,
-    },
-  };
-  if (apiKey) {
-    options.headers.Authorization = `Bearer ${apiKey}`;
+exports.runAlloy = async (config) => {
+  const { workflowId, apiKey, parameters, getOutput } = config;
+  const data = parameters ? parameters : {};
+
+  if (!!getOutput && !apiKey) {
+    throw new Error('API Key is required to retrieve output from workflow');
   }
-  return new Promise((resolve, reject) => {
-    const req = https.request(options, (res) => {
-      const { statusCode } = res;
 
-      if (statusCode !== 200) {
-        reject(new Error('Failed to run workflow, check your configuration'));
+  const options = {
+    url: !!getOutput
+      ? `https://api.runalloy.com/webhook/${workflowId}`
+      : `https://webhooks.runalloy.com/${workflowId}`,
+    method: 'POST',
+    data,
+  };
+
+  if (apiKey) {
+    options.headers = { Authorization: `Bearer ${apiKey}` };
+  }
+
+  if (getOutput) {
+    //long poll for results
+    const initialResult = await axios.request(options);
+    if (initialResult.data && initialResult.data.executionId) {
+      const pollingOptions = {
+        url: `https://api.runalloy.com/sdk/output/${initialResult.data.executionId}`,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
+      };
+      //don't poll indefinitely
+      for (let i = 0; i < 10; i++) {
+        const pollResult = await axios.request(pollingOptions);
+        if (pollResult.data && pollResult.data.data) {
+          return pollResult.data;
+        }
       }
-
-      res.on('end', () => {
-        resolve();
-      });
-
-      res.on('error', () => {
-        reject(new Error('Failed to run workflow, check your configuration'));
-      });
-    });
-
-    req.on('error', (e) => {
-      reject(e);
-    });
-
-    req.write(data);
-    req.end();
-  });
+    } else {
+      //can't retrieve data
+      throw new Error(
+        'Encountered an error while attempting to run your workflow'
+      );
+    }
+  } else {
+    //return immediately
+    await axios.request(options);
+  }
 };

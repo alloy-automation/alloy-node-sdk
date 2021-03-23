@@ -18,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/alloy-automation/alloy-node-sdk/issues"
   },
-  "homepage": "https://github.com/alloy-automation/alloy-node-sdk#readme"
+  "homepage": "https://github.com/alloy-automation/alloy-node-sdk#readme",
+  "dependencies": {
+    "axios": "^0.21.1"
+  }
 }
